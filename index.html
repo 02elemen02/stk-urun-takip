@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ürün son kullanma tarihi takip uygulaması">
+    <meta name="theme-color" content="#6366f1">
+    <title>STK Ürün Takip</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+    <!-- Giriş/Kayıt Ekranı -->
+    <div id="auth-container" class="auth-container">
+        <div class="auth-card">
+            <h1>📦 STK Ürün Takip</h1>
+            <p class="auth-subtitle">Bulut tabanlı ürün takip sistemi</p>
+
+            <div id="login-form" class="auth-form">
+                <h2>Giriş Yap</h2>
+                <input type="email" id="login-email" placeholder="E-posta" required>
+                <input type="password" id="login-password" placeholder="Şifre" required>
+                <button id="login-btn" class="btn btn-primary">Giriş Yap</button>
+                <p class="auth-toggle">Hesabınız yok mu? <a href="#" id="show-register">Kayıt Ol</a></p>
+            </div>
+
+            <div id="register-form" class="auth-form hidden">
+                <h2>Kayıt Ol</h2>
+                <input type="text" id="register-name" placeholder="Adınız Soyadınız" required>
+                <input type="email" id="register-email" placeholder="E-posta" required>
+                <input type="password" id="register-password" placeholder="Şifre (min 6 karakter)" required>
+                <button id="register-btn" class="btn btn-primary">Kayıt Ol</button>
+                <p class="auth-toggle">Zaten hesabınız var mı? <a href="#" id="show-login">Giriş Yap</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ana Uygulama -->
+    <div id="app-container" class="app-container hidden">
+        <!-- Header -->
+        <header class="app-header">
+            <div>
+                <h1>📦 STK Ürün Takip</h1>
+                <p class="subtitle">Son kullanma tarihi yaklaşan ürünleri takip edin</p>
+            </div>
+            <div class="user-info">
+                <span id="user-name">Kullanıcı</span>
+                <button id="logout-btn" class="btn btn-secondary">Çıkış</button>
+            </div>
+        </header>
+
+        <!-- Bildirim İzin Butonu -->
+        <div id="notification-prompt" class="notification-prompt hidden">
+            <p>⏰ Bildirimleri açmak ister misiniz?</p>
+            <button id="enable-notifications" class="btn btn-primary">Bildirimleri Aç</button>
+        </div>
+
+        <!-- Fotoğraf Ekleme -->
+        <section class="add-product-section">
+            <h2>Fotoğraf Çek</h2>
+
+            <div class="camera-container">
+                <video id="camera" autoplay playsinline class="hidden"></video>
+                <canvas id="canvas" class="hidden"></canvas>
+                <div id="photo-preview" class="photo-preview hidden">
+                    <img id="preview-img" src="" alt="Ürün fotoğrafı">
+                </div>
+                <button id="take-photo-btn" class="btn btn-camera">📷 Fotoğraf Çek</button>
+                <button id="capture-btn" class="btn btn-primary hidden">Çek</button>
+                <button id="retake-btn" class="btn btn-secondary hidden">Tekrar Çek</button>
+            </div>
+
+            <form id="product-form">
+                <div class="form-group">
+                    <label>Hangi Gün Son Kullanma Tarihi?</label>
+                    <div id="calendar-buttons" class="calendar-buttons">
+                        <!-- Dinamik olarak JavaScript ile doldurulacak -->
+                    </div>
+                    <input type="hidden" id="selected-date" required>
+                </div>
+
+                <button type="submit" class="btn btn-add">Kaydet</button>
+            </form>
+        </section>
+
+        <!-- Tarih Bazlı Görüntüleme -->
+        <section class="products-section">
+            <h2>Tarihlere Göre Fotoğraflar</h2>
+            <div id="date-list" class="date-list">
+                <p class="empty-message">Yükleniyor...</p>
+            </div>
+            <div id="photos-container" class="photos-container hidden">
+                <div class="photos-header">
+                    <button id="back-btn" class="btn btn-secondary">← Geri</button>
+                    <button id="delete-all-btn" class="btn btn-danger">🗑️ Tümünü Sil</button>
+                </div>
+                <h3 id="selected-date-title"></h3>
+                <div id="photos-grid" class="photos-grid"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+
+    <!-- Service Worker Kayıt -->
+    <script>
+        // Global hata yakalama
+        window.addEventListener('error', (e) => {
+            console.error('Global hata:', e.error);
+            alert('Bir hata oluştu. Lütfen sayfayı yenileyin veya Firebase güvenlik kurallarını kontrol edin.');
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Promise hatası:', e.reason);
+            if (e.reason && e.reason.code === 'permission-denied') {
+                alert('⚠️ Firebase erişim hatası!\n\nFirebase güvenlik kurallarının süresi dolmuş olabilir.\n\nLütfen FIREBASE_GUVENLIK_KURALLARI.md dosyasındaki talimatları takip edin.');
+            }
+        });
+
+        // Service Worker kayıt
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('✅ Service Worker kayıtlı:', reg.scope))
+                    .catch(err => console.log('❌ Service Worker hatası:', err));
+            });
+        }
+    </script>
+</body>
+
+</html>
