@@ -181,37 +181,81 @@ function generateCalendar() {
     }
 }
 
-// Kamera (Native Input Seçimi)
-cameraFallback.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        // Önizleme için resmi oku
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            currentPhoto = event.target.result;
-            previewImg.src = currentPhoto;
-
-            // Görsel arayüzü güncelle
-            photoPreview.classList.remove('hidden');
-            retakeBtn.classList.remove('hidden');
-            takePhotoBtn.style.display = 'none'; // Label gizzlenmeli
-            
-            // WebRTC elementlerini tamamen gizle (artık kullanılmıyor)
-            camera.classList.add('hidden');
-            captureBtn.classList.add('hidden');
+// Kamerayı Tamamen Başlat
+async function startCamera() {
+    try {
+        const constraints = {
+            video: {
+                facingMode: { ideal: "environment" },
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }
         };
-        reader.readAsDataURL(file);
+
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        camera.srcObject = stream;
+        
+        // Arayüz geçişleri
+        camera.classList.remove('hidden');
+        captureBtn.classList.remove('hidden');
+        takePhotoBtn.classList.add('hidden');
+        photoPreview.classList.add('hidden');
+        
+    } catch (error) {
+        console.error('Kamera başlatılamadı:', error);
+        alert('Kamera açılamadı. Lütfen uygulamanın (veya tarayıcının) kamera erişim izni olduğuna emin olun. Ayarlar -> Uygulamalar -> İzinler bölümünden kontrol edebilirsiniz.');
     }
-    // Seçim yapılmazsa veya iptal edilirse input'u temizle
-    cameraFallback.value = '';
+}
+
+// Kamerayı Tamamen Durdur ve Belleği Temizle
+function stopCamera() {
+    if (stream) {
+        stream.getTracks().forEach(track => {
+            track.stop();
+        });
+        camera.srcObject = null;
+        stream = null;
+    }
+}
+
+// Kamera Başlat (WebRTC)
+takePhotoBtn.addEventListener('click', () => {
+    startCamera();
 });
 
-// Tekrar Çek
+// Fotoğraf Çek (WebRTC)
+captureBtn.addEventListener('click', () => {
+    if (!stream) return;
+
+    // Kameradaki görüntüyü canvas'a çizdir
+    const context = canvas.getContext('2d');
+    canvas.width = camera.videoWidth;
+    canvas.height = camera.videoHeight;
+    context.drawImage(camera, 0, 0, canvas.width, canvas.height);
+
+    // Canvas'ı resme çevir
+    currentPhoto = canvas.toDataURL('image/jpeg', 0.8);
+    previewImg.src = currentPhoto;
+
+    // Kamerayı durdur, stream'i sıfırla (ikinci açılışa hazırla)
+    stopCamera();
+
+    // Arayüzü güncelle
+    camera.classList.add('hidden');
+    captureBtn.classList.add('hidden');
+    photoPreview.classList.remove('hidden');
+    retakeBtn.classList.remove('hidden');
+});
+
+// Yeniden Çek (Ortak)
 retakeBtn.addEventListener('click', () => {
+    // Fotoğrafı sil
     currentPhoto = null;
     photoPreview.classList.add('hidden');
     retakeBtn.classList.add('hidden');
-    takePhotoBtn.style.display = 'inline-block'; // Label görünür olsun
+    
+    // Doğrudan kamerayı yeniden tetikle
+    startCamera();
 });
 
 // Form Gönder - Firebase'e Kaydet
