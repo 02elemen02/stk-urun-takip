@@ -376,6 +376,8 @@ function checkExpiringProducts(photosByDate) {
     let expiredItems = 0;
     let urgentItems = 0;
 
+    console.log("SKT Analizi Başladı...", photosByDate);
+
     // Önceki pulse (uyarı) animasyonlarını takvimden temizle
     document.querySelectorAll('.calendar-btn.pulse-alert').forEach(btn => {
         btn.classList.remove('pulse-alert');
@@ -384,6 +386,7 @@ function checkExpiringProducts(photosByDate) {
     Object.keys(photosByDate).forEach(dateKey => {
         const daysLeft = getDaysUntilExpiry(dateKey);
         const itemCount = photosByDate[dateKey].length;
+        console.log(`Tarih: ${dateKey}, Kalan Gün: ${daysLeft}, Ürün Sayısı: ${itemCount}`);
 
         if (daysLeft < 0) {
             expiredItems += itemCount;
@@ -400,9 +403,13 @@ function checkExpiringProducts(photosByDate) {
 
     const dashboard = document.getElementById('alert-dashboard');
     const alertDesc = document.getElementById('alert-desc');
+    
+    console.log(`Sonuç -> Geçmiş: ${expiredItems}, Acil: ${urgentItems}`);
 
+    // TEST VEYA GERÇEK VERİ: Eğer hiç ürün yoksa, panel gizli kalsın
     if (expiredItems > 0 || urgentItems > 0) {
         dashboard.classList.remove('hidden');
+        dashboard.style.display = 'flex'; // CSS çakışmasına karşı zorlama
         let descRows = [];
         
         if (expiredItems > 0) {
@@ -421,6 +428,7 @@ function checkExpiringProducts(photosByDate) {
     } else {
         // Uyarı yoksa paneli gizle
         dashboard.classList.add('hidden');
+        dashboard.style.display = 'none';
     }
 }
 
@@ -548,12 +556,19 @@ deleteAllBtn.addEventListener('click', async () => {
 // ==================== YARDIMCI FONKSİYONLAR ====================
 
 function getDaysUntilExpiry(dateKey) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const expiry = new Date(dateKey);
-    expiry.setHours(0, 0, 0, 0);
-    const diffTime = expiry - today;
+    // String (YYYY-MM-DD) olan hedef tarihi al, saat başı karmaşasından kurtulmak için UTC bazında analiz et
+    const targetDate = new Date(dateKey + 'T00:00:00Z');
+    
+    // Bugünü al ancak tamamen Timezone'dan (GMT+3 vs) arındır ve gece 12:00'a sabitle
+    const now = new Date();
+    const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0));
+    
+    // İki tarih arasındaki milisaniye farkı
+    const diffTime = targetDate.getTime() - today.getTime();
+    
+    // Güne çevir
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
     return diffDays;
 }
 
