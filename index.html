@@ -47,6 +47,7 @@
             <div>
                 <h1>📦 STK Ürün Takip</h1>
                 <p class="subtitle">Son kullanma tarihi yaklaşan ürünleri takip edin</p>
+                <button id="install-app-btn" class="btn btn-primary hidden" style="margin-top: 10px; font-size: 0.85rem; padding: 0.5rem; background-color: #10b981;">⬇️ Uygulamayı Telefona Yükle</button>
             </div>
             <div class="user-info">
                 <span id="user-name">Kullanıcı</span>
@@ -54,9 +55,14 @@
             </div>
         </header>
 
-        <!-- Bildirim İzin Butonu -->
-        <div id="notification-prompt" class="notification-prompt hidden">
-            <p>⏰ Bildirimleri açmak ister misiniz?</p>
+        <!-- Acil Durum / Hatırlatıcı Paneli (In-App Notification) -->
+        <div id="alert-dashboard" class="alert-dashboard hidden">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content">
+                <h3 id="alert-title">DİKKAT: Süresi Yaklaşan/Geçen Ürünler Var!</h3>
+                <p id="alert-desc">... ürünün tarihi geçti, ... ürünün bitmesine çok az kaldı.</p>
+            </div>
+        </div>
             <button id="enable-notifications" class="btn btn-primary">Bildirimleri Aç</button>
         </div>
 

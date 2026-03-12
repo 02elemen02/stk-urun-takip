@@ -35,6 +35,39 @@ const deleteAllBtn = document.getElementById('delete-all-btn');
 const selectedDateTitle = document.getElementById('selected-date-title');
 const notificationPrompt = document.getElementById('notification-prompt');
 const enableNotificationsBtn = document.getElementById('enable-notifications');
+const installAppBtn = document.getElementById('install-app-btn');
+
+// ==================== PWA KURULUM (A2HS) ====================
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Tarayıcının varsayılan kurulum penceresini otomatik açmasını engelle
+    e.preventDefault();
+    // Olayı daha sonra tetiklemek üzere sakla
+    deferredPrompt = e;
+    // Yükle butonunu görünür yap
+    installAppBtn.classList.remove('hidden');
+});
+
+installAppBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+        // Kurulum penceresini göster
+        deferredPrompt.prompt();
+        // Kullanıcının kararı bekleniyor
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`Kullanıcı kurulumu ${outcome === 'accepted' ? 'kabul etti' : 'reddetti'}`);
+        // deferredPrompt sadece bir kez kullanılabilir
+        deferredPrompt = null;
+        // Butonu tekrar gizle
+        installAppBtn.classList.add('hidden');
+    }
+});
+
+// Zaten kurulduysa butonu sakla
+window.addEventListener('appinstalled', () => {
+    installAppBtn.classList.add('hidden');
+    console.log('PWA başarıyla kuruldu');
+});
 
 // ==================== AUTH İŞLEMLERİ ====================
 
@@ -328,12 +361,67 @@ function loadDates() {
             });
 
             renderDateList(photosByDate);
+            // SKT Uyarısı (In-App Notification) Kontrolü
+            checkExpiringProducts(photosByDate);
         }, (error) => {
             console.error('Firebase okuma hatası:', error);
             if (error.code === 'permission-denied') {
                 dateList.innerHTML = '<p class="empty-message" style="color: #ef4444;">⚠️ Firebase erişim hatası!<br><br>Güvenlik kurallarının süresi dolmuş olabilir.<br>Lütfen FIREBASE_GUVENLIK_KURALLARI.md dosyasındaki talimatları takip edin.</p>';
             }
         });
+}
+
+// In-App Hatırlatıcı Paneli Analizi
+function checkExpiringProducts(photosByDate) {
+    let expiredItems = 0;
+    let urgentItems = 0;
+
+    // Önceki pulse (uyarı) animasyonlarını takvimden temizle
+    document.querySelectorAll('.calendar-btn.pulse-alert').forEach(btn => {
+        btn.classList.remove('pulse-alert');
+    });
+
+    Object.keys(photosByDate).forEach(dateKey => {
+        const daysLeft = getDaysUntilExpiry(dateKey);
+        const itemCount = photosByDate[dateKey].length;
+
+        if (daysLeft < 0) {
+            expiredItems += itemCount;
+            // Tarihi geçen takvim butonunu kırmızı yak
+            const btn = document.querySelector(`.calendar-btn[data-date="${dateKey}"]`);
+            if (btn) btn.classList.add('pulse-alert');
+        } else if (daysLeft <= 3) {
+            urgentItems += itemCount;
+            // SKT'si yaklaşan takvim butonunu kırmızı yak
+            const btn = document.querySelector(`.calendar-btn[data-date="${dateKey}"]`);
+            if (btn) btn.classList.add('pulse-alert');
+        }
+    });
+
+    const dashboard = document.getElementById('alert-dashboard');
+    const alertDesc = document.getElementById('alert-desc');
+
+    if (expiredItems > 0 || urgentItems > 0) {
+        dashboard.classList.remove('hidden');
+        let descRows = [];
+        
+        if (expiredItems > 0) {
+            descRows.push(`🚨 <strong>${expiredItems}</strong> ürünün tarihi GEÇTİ!`);
+        }
+        if (urgentItems > 0) {
+            descRows.push(`⚠️ <strong>${urgentItems}</strong> ürünün bitmesine 3 günden az kaldı.`);
+        }
+        
+        alertDesc.innerHTML = descRows.join('<br>');
+        
+        // Tıklanınca ürün listelerine (aşağıya) kaydır
+        dashboard.onclick = () => {
+            document.getElementById('date-list').scrollIntoView({ behavior: 'smooth' });
+        };
+    } else {
+        // Uyarı yoksa paneli gizle
+        dashboard.classList.add('hidden');
+    }
 }
 
 // Tarih Listesini Göster
