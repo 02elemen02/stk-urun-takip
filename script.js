@@ -183,18 +183,29 @@ function generateCalendar() {
 
 // Kamera Başlat
 takePhotoBtn.addEventListener('click', async () => {
-    try {
-        stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment' }
-        });
-        camera.srcObject = stream;
-        camera.classList.remove('hidden');
-        captureBtn.classList.remove('hidden');
-        takePhotoBtn.classList.add('hidden');
-    } catch (error) {
-        console.warn('Web kamera API erişilemedi, native kamera açılıyor...', error);
-        // Fallback: Tarayıcının native kamerasını (veya dosya seçiciyi) aç
+    // 1. Önce cihazın mobilde WebView/APK içinde olup olmadığını basitçe kontrol edelim
+    // Veya her zaman en güvenilir olan doğrudan native dosya/kamera seçiciyi tetikleyelim.
+    // Çünkü "getUserMedia" APK'larda sessizce asılı kalabiliyor.
+    
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        // Mobilde isek risk almayıp doğrudan native kamerayı/dosya seçiciyi açalım.
         cameraFallback.click();
+    } else {
+        // Masaüstünde isek WebRTC (tarayıcı içi) kamerayı deneyelim
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }
+            });
+            camera.srcObject = stream;
+            camera.classList.remove('hidden');
+            captureBtn.classList.remove('hidden');
+            takePhotoBtn.classList.add('hidden');
+        } catch (error) {
+            console.warn('Web kamera API erişilemedi, native kamera açılıyor...', error);
+            cameraFallback.click();
+        }
     }
 });
 
