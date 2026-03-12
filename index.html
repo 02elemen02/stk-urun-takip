@@ -65,17 +65,17 @@
             <h2>Fotoğraf Çek</h2>
 
             <div class="camera-container">
-                <video id="camera" autoplay playsinline class="hidden"></video>
-                <canvas id="canvas" class="hidden"></canvas>
                 <div id="photo-preview" class="photo-preview hidden">
                     <img id="preview-img" src="" alt="Ürün fotoğrafı">
                 </div>
-                <button id="take-photo-btn" class="btn btn-camera">📷 Fotoğraf Çek</button>
-                <button id="capture-btn" class="btn btn-primary hidden">Çek</button>
-                <button id="retake-btn" class="btn btn-secondary hidden">Tekrar Çek</button>
+                <!-- Yeni Tam Güvenilir Kamera Butonu (Label ile Input Tetikleme) -->
+                <!-- Bu yöntem WebView'da JavaScript engeline takılmaz -->
+                <input type="file" id="camera-fallback" accept="image/*" capture="environment" class="hidden">
+                <label for="camera-fallback" id="take-photo-btn" class="btn btn-camera" style="display: inline-block; text-align: center; cursor: pointer; padding: 0.875rem 1.5rem; width: 100%; max-width: 400px;">
+                    📷 Fotoğraf Çek
+                </label>
                 
-                <!-- Fallback: Native Kamera Erişimi -->
-                <input type="file" id="camera-fallback" accept="image/*" capture="environment" style="display: none;">
+                <button id="retake-btn" class="btn btn-secondary hidden">Yeniden Çek</button>
             </div>
 
             <form id="product-form">

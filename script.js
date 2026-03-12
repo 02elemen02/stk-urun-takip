@@ -181,46 +181,22 @@ function generateCalendar() {
     }
 }
 
-// Kamera Başlat
-takePhotoBtn.addEventListener('click', async () => {
-    // 1. Önce cihazın mobilde WebView/APK içinde olup olmadığını basitçe kontrol edelim
-    // Veya her zaman en güvenilir olan doğrudan native dosya/kamera seçiciyi tetikleyelim.
-    // Çünkü "getUserMedia" APK'larda sessizce asılı kalabiliyor.
-    
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-        // Mobilde isek risk almayıp doğrudan native kamerayı/dosya seçiciyi açalım.
-        cameraFallback.click();
-    } else {
-        // Masaüstünde isek WebRTC (tarayıcı içi) kamerayı deneyelim
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' }
-            });
-            camera.srcObject = stream;
-            camera.classList.remove('hidden');
-            captureBtn.classList.remove('hidden');
-            takePhotoBtn.classList.add('hidden');
-        } catch (error) {
-            console.warn('Web kamera API erişilemedi, native kamera açılıyor...', error);
-            cameraFallback.click();
-        }
-    }
-});
-
-// Fallback Native Kamera Seçimi
+// Kamera (Native Input Seçimi)
 cameraFallback.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
+        // Önizleme için resmi oku
         const reader = new FileReader();
         reader.onload = (event) => {
             currentPhoto = event.target.result;
             previewImg.src = currentPhoto;
 
+            // Görsel arayüzü güncelle
             photoPreview.classList.remove('hidden');
             retakeBtn.classList.remove('hidden');
-            takePhotoBtn.classList.add('hidden');
+            takePhotoBtn.style.display = 'none'; // Label gizzlenmeli
+            
+            // WebRTC elementlerini tamamen gizle (artık kullanılmıyor)
             camera.classList.add('hidden');
             captureBtn.classList.add('hidden');
         };
@@ -230,32 +206,12 @@ cameraFallback.addEventListener('change', (e) => {
     cameraFallback.value = '';
 });
 
-// Fotoğraf Çek
-captureBtn.addEventListener('click', () => {
-    const context = canvas.getContext('2d');
-    canvas.width = camera.videoWidth;
-    canvas.height = camera.videoHeight;
-    context.drawImage(camera, 0, 0);
-
-    currentPhoto = canvas.toDataURL('image/jpeg', 0.8);
-    previewImg.src = currentPhoto;
-
-    if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-    }
-
-    camera.classList.add('hidden');
-    captureBtn.classList.add('hidden');
-    photoPreview.classList.remove('hidden');
-    retakeBtn.classList.remove('hidden');
-});
-
 // Tekrar Çek
 retakeBtn.addEventListener('click', () => {
     currentPhoto = null;
     photoPreview.classList.add('hidden');
     retakeBtn.classList.add('hidden');
-    takePhotoBtn.classList.remove('hidden');
+    takePhotoBtn.style.display = 'inline-block'; // Label görünür olsun
 });
 
 // Form Gönder - Firebase'e Kaydet
