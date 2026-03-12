@@ -69,8 +69,8 @@
                     <img id="preview-img" src="" alt="Ürün fotoğrafı">
                 </div>
                 <!-- Yeni Tam Güvenilir Kamera Butonu (Label ile Input Tetikleme) -->
-                <!-- Bu yöntem WebView'da JavaScript engeline takılmaz -->
-                <input type="file" id="camera-fallback" accept="image/*" capture="environment" class="hidden">
+                <!-- Bu yöntem WebView'da JavaScript engeline takılmaz ve sadece kamerayı zorlar -->
+                <input type="file" id="camera-fallback" accept="image/*;capture=camera" capture="camera" class="hidden">
                 <label for="camera-fallback" id="take-photo-btn" class="btn btn-camera" style="display: inline-block; text-align: center; cursor: pointer; padding: 0.875rem 1.5rem; width: 100%; max-width: 400px;">
                     📷 Fotoğraf Çek
                 </label>
