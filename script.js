@@ -23,6 +23,7 @@ const previewImg = document.getElementById('preview-img');
 const takePhotoBtn = document.getElementById('take-photo-btn');
 const captureBtn = document.getElementById('capture-btn');
 const retakeBtn = document.getElementById('retake-btn');
+const cameraFallback = document.getElementById('camera-fallback'); // Native kamera inputu
 const productForm = document.getElementById('product-form');
 const calendarButtons = document.getElementById('calendar-buttons');
 const selectedDateInput = document.getElementById('selected-date');
@@ -191,9 +192,31 @@ takePhotoBtn.addEventListener('click', async () => {
         captureBtn.classList.remove('hidden');
         takePhotoBtn.classList.add('hidden');
     } catch (error) {
-        alert('Kamera erişimi reddedildi veya mevcut değil.');
-        console.error(error);
+        console.warn('Web kamera API erişilemedi, native kamera açılıyor...', error);
+        // Fallback: Tarayıcının native kamerasını (veya dosya seçiciyi) aç
+        cameraFallback.click();
     }
+});
+
+// Fallback Native Kamera Seçimi
+cameraFallback.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            currentPhoto = event.target.result;
+            previewImg.src = currentPhoto;
+
+            photoPreview.classList.remove('hidden');
+            retakeBtn.classList.remove('hidden');
+            takePhotoBtn.classList.add('hidden');
+            camera.classList.add('hidden');
+            captureBtn.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+    // Seçim yapılmazsa veya iptal edilirse input'u temizle
+    cameraFallback.value = '';
 });
 
 // Fotoğraf Çek

@@ -73,6 +73,9 @@
                 <button id="take-photo-btn" class="btn btn-camera">📷 Fotoğraf Çek</button>
                 <button id="capture-btn" class="btn btn-primary hidden">Çek</button>
                 <button id="retake-btn" class="btn btn-secondary hidden">Tekrar Çek</button>
+                
+                <!-- Fallback: Native Kamera Erişimi -->
+                <input type="file" id="camera-fallback" accept="image/*" capture="environment" style="display: none;">
             </div>
 
             <form id="product-form">
